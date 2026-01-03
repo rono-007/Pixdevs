@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup | Port.io</title>
+    <!-- Same Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .setup-container {
+            max-width: 1000px;
+            margin: 60px auto;
+            padding: 20px;
+        }
+
+        .setup-card {
+            padding: 40px;
+        }
+
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            margin-bottom: 24px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-number {
+            background: var(--brand-primary);
+            color: #000;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 12px;
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--brand-primary);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .file-upload-box {
+            border: 2px dashed var(--glass-border);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .file-upload-box:hover {
+            border-color: var(--brand-primary);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .file-upload-box input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* 2-Column Layout */
+        .setup-columns {
+            display: flex;
+            gap: 40px;
+        }
+
+        .setup-col {
+            flex: 1;
+            min-width: 0;
+            /* Prevent flex overflow */
+        }
+
+        .vertical-divider {
+            width: 1px;
+            background: var(--glass-border);
+            position: relative;
+        }
+
+        .error-banner {
+            background: rgba(255, 85, 85, 0.1);
+            border: 1px solid var(--brand-danger);
+            color: var(--brand-danger);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .helper-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .setup-columns {
+                flex-direction: column;
+            }
+
+            .vertical-divider {
+                display: none;
+            }
+
+            .setup-container {
+                margin: 20px auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-bg"></div>
+    <div class="noise-overlay"></div>
+
+    <div class="setup-container fade-in-up">
+        <header style="text-align:center; margin-bottom:40px;">
+            <h1 style="font-family:'Space Grotesk'; font-size:2rem; margin-bottom:10px;">Setup Credentials</h1>
+            <p style="color:var(--text-muted);">Configure your environment to run privately and locally.</p>
+        </header>
+
+        {% if error %}
+        <div class="error-banner">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="glass-card setup-card">
+
+            <div class="setup-columns">
+                <!-- LEFT COLUMN: SPOTIFY -->
+                <div class="setup-col">
+                    <div class="section-title">
+                        <span class="section-number">1</span>
+                        Spotify Developer Keys
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Client ID</label>
+                        <input type="text" name="spotify_client_id" class="form-control" placeholder="e.g. 7f8d..."
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Client Secret</label>
+                        <input type="password" name="spotify_client_secret" class="form-control"
+                            placeholder="e.g. 9a2b..." required>
+                        <p class="helper-text">Create an app at <a href="https://developer.spotify.com/dashboard"
+                                target="_blank"
+                                style="color:inherit; text-decoration:underline;">developer.spotify.com</a></p>
+                    </div>
+                </div>
+
+                <!-- VERTICAL DIVIDER -->
+                <div class="vertical-divider"></div>
+
+                <!-- RIGHT COLUMN: YOUTUBE MUSIC -->
+                <div class="setup-col">
+                    <div class="section-title">
+                        <span class="section-number">2</span>
+                        YouTube Music Auth
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Option A: Upload browser.json</label>
+                        <div class="file-upload-box" id="dropZone">
+                            <p style="margin-bottom:10px;">Drag & Drop or Click to Upload</p>
+                            <p class="helper-text">browser.json from ytmusicapi setup</p>
+                            <input type="file" name="yt_browser_json" accept=".json" onchange="updateFileName(this)">
+                        </div>
+                        <p id="fileName" class="helper-text" style="text-align:center; margin-top:8px; display:none;">
+                        </p>
+                    </div>
+
+                    <p style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin:20px 0;">— OR —</p>
+
+                    <div class="form-group">
+                        <label class="form-label">Option B: Paste Request Headers</label>
+                        <textarea name="yt_headers_text" class="form-control" rows="4"
+                            placeholder="User-Agent: ... Cookie: ..."></textarea>
+                        <p class="helper-text">Copy headers from a YouTube Music request in DevTools.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--glass-border); margin: 30px 0;">
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-primary" style="width:100%;">
+                Validate & Start App
+            </button>
+
+            <p style="text-align:center; margin-top:20px; font-size:0.75rem; color:var(--text-muted); opacity:0.5;">
+                Credentials are stored in memory and cleared on restart.
+            </p>
+        </form>
+    </div>
+
+    <script>
+        function updateFileName(input) {
+            const display = document.getElementById('fileName');
+            if (input.files && input.files[0]) {
+                display.style.display = 'block';
+                display.textContent = 'Selected: ' + input.files[0].name;
+                display.style.color = 'var(--brand-primary)';
+            }
+        }
+    </script>
+</body>
+
+</html>

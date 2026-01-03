@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Port.io | Spotify to YT Music</title>
+
+    <!-- Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <!-- Cinematic Background -->
+    <div class="ambient-bg"></div>
+    <div class="noise-overlay"></div>
+
+    <!-- Theme Toggle -->
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle Dark Mode"
+        style="position:fixed; top:24px; right:24px; z-index:10000;">
+        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    {% if is_logged_in %}
+    <a href="/logout" class="logout-link" title="Disconnect Spotify">Disconnect</a>
+    {% endif %}
+
+    {% if not is_logged_in %}
+    <!-- LANDING PAGE -->
+    <div class="landing-container">
+        <nav class="landing-nav fade-in">
+            <div class="logo">Port.io</div>
+        </nav>
+
+        <section class="hero-section">
+            <div class="hero-content fade-in-up">
+                <h1 class="hero-title">Move Your Music.<br>Seamlessly.</h1>
+                <p class="hero-subtitle">Convert Spotify playlists into YouTube Music with mood-aware precision.</p>
+                <div class="hero-actions" style="display:flex; gap:16px; justify-content:center; align-items:center;">
+                    <a href="/login" class="btn btn-spotify btn-lg" style="min-width:140px;">
+                        Connect
+                    </a>
+                    <a href="/docs" class="btn btn-outline btn-lg" style="min-width:180px; text-align:center;">
+                        Read Documentation
+                    </a>
+                    <!-- Removed meta span from here to cleanup alignment, can move below if needed -->
+                </div>
+                <!-- Re-adding meta below -->
+                <div style="margin-top:20px;">
+                    <span class="hero-meta">Local • Private • No Ads • Free</span>
+                </div>
+            </div>
+
+            <div class="hero-visual fade-in">
+                <!-- Abstract Visuals -->
+                <div class="visual-orb orb-1"></div>
+                <div class="visual-orb orb-2"></div>
+                <div class="equalizer-visual">
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features-section fade-in-up" style="animation-delay: 0.2s;">
+            <div class="feature-card glass-card">
+                <div class="feature-icon">🎵</div>
+                <h3>Smart Matching</h3>
+                <p>Intelligently finds the best audio match on YouTube Music.</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="feature-icon">🎼</div>
+                <h3>Mood Analysis</h3>
+                <p>Visualizes the energy and vibes of your playlists.</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Fast & Local</h3>
+                <p>Runs directly in your browser session for maximum privacy.</p>
+            </div>
+        </section>
+
+        <footer class="landing-footer">
+            <p>Designed for Music Lovers • 2025</p>
+        </footer>
+    </div>
+
+    {% else %}
+    <!-- APP INTERFACE -->
+    <div class="layout-wrapper">
+
+        <!-- LEFT COLUMN: Main Converter -->
+        <div class="main-column">
+            <main class="glass-card">
+                <header class="app-header" style="position:relative;">
+                    <h1>Port.io</h1>
+                    <p class="subtitle">Spotify <span style="color:var(--brand-primary); margin:0 4px;">→</span> YouTube
+                        Music</p>
+                </header>
+
+                <div class="content-area">
+                    <!-- Converter State -->
+                    <div class="state-converter fade-in-up">
+                        <div class="input-wrapper">
+                            <input type="text" id="playlistUrl" class="premium-input" placeholder=" "
+                                autocomplete="off">
+                            <label for="playlistUrl" class="floating-label">Paste Spotify Playlist URL</label>
+                        </div>
+
+                        <button id="convertBtn" class="btn btn-primary">
+                            <span class="btn-text">Start Conversion</span>
+                        </button>
+
+                        <!-- Progress Area -->
+                        <div id="statusArea" class="status-panel hidden">
+                            <div class="progress-header">
+                                <span id="currentAction" class="status-text">Initializing...</span>
+                                <span id="progressText" class="status-count">0/0</span>
+                            </div>
+
+                            <!-- Sound Wave Visualization -->
+                            <div id="waveContainer" class="wave-container">
+                                <!-- Bars injected by JS -->
+                            </div>
+
+                            <div class="stats-row">
+                                <div class="stat-item">
+                                    <span class="stat-label">Added</span>
+                                    <span id="addedCount" class="stat-value add">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Skipped</span>
+                                    <span id="skippedCount" class="stat-value skip">0</span>
+                                </div>
+                            </div>
+
+                            <div class="results-container">
+                                <div class="log-window">
+                                    <div id="log-container" class="log-list"></div>
+                                </div>
+                                <div class="log-fade-overlay"></div>
+                            </div>
+
+                            <!-- Success State (Overlay) -->
+                            <div id="successMessage" class="success-panel hidden">
+                                <div class="success-content">
+                                    <h3 style="font-family:'Space Grotesk'; font-size:1.8rem; margin-bottom:10px;">
+                                        Complete</h3>
+                                    <p style="color:var(--text-muted); margin-bottom:20px;">Your playlist has been
+                                        created successfully.</p>
+                                    <button id="resetBtn" class="btn btn-secondary">Convert Another</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer style="text-align:center; margin-top:30px; color:var(--text-muted); font-size:0.8rem; opacity:0.5;">
+                <p>Designed for Music Lovers • 2025</p>
+            </footer>
+        </div>
+
+        <!-- RIGHT COLUMN: Mood Board -->
+        <div class="side-column" style="width: 350px; margin-left: 20px;">
+            <aside class="glass-card mood-container">
+                <div class="mood-header">
+                    <h2 style="font-size:1.2rem; margin-bottom:5px;">Vibe Check</h2>
+                    <p class="subtitle" id="moodLabel" style="font-size:0.9rem;">Waiting for music...</p>
+                </div>
+
+                <div class="mood-orb-container">
+                    <div id="moodOrb" class="mood-orb"></div>
+                    <!-- Genres injected here -->
+                    <div id="genreContainer"></div>
+                </div>
+
+                <div class="mood-stats-row">
+                    <div class="stat-box">
+                        <div id="energyVal" class="stat-value">-</div>
+                        <div class="stat-label">Energy</div>
+                    </div>
+                    <div class="stat-box">
+                        <div id="valenceVal" class="stat-value">-</div>
+                        <div class="stat-label">Mood</div>
+                    </div>
+                    <div class="stat-box">
+                        <div id="trackCountVal" class="stat-value">-</div>
+                        <div class="stat-label">Tracks</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+
+    </div>
+    {% endif %}
+
+    <!-- JS Logic -->
+    <script>
+        // --- Theme Toggle ---
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        html.setAttribute('data-theme', savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // --- Core Logic ---
+        const convertBtn = document.getElementById('convertBtn');
+        const playlistUrlInput = document.getElementById('playlistUrl');
+        const statusArea = document.getElementById('statusArea');
+        const btnText = document.querySelector('.btn-text');
+
+        // Fix: Explicitly select log container
+        const logList = document.getElementById('log-container');
+
+        const currentAction = document.getElementById('currentAction');
+        const progressText = document.getElementById('progressText');
+        const addedCountSpan = document.getElementById('addedCount');
+        const skippedCountSpan = document.getElementById('skippedCount');
+        const successMessage = document.getElementById('successMessage');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Mood Elements
+        const moodLabel = document.getElementById('moodLabel');
+        const moodOrb = document.getElementById('moodOrb');
+        const genreContainer = document.getElementById('genreContainer');
+        const energyVal = document.getElementById('energyVal');
+        const valenceVal = document.getElementById('valenceVal');
+        const trackCountVal = document.getElementById('trackCountVal');
+
+        // Wave Container
+        const waveContainer = document.getElementById('waveContainer');
+        const TOTAL_BARS = 30;
+
+        let isConverting = false;
+        let abortController = null;
+
+        // --- Init Wave ---
+        function initWave() {
+            if (!waveContainer) return;
+            waveContainer.innerHTML = '';
+            for (let i = 0; i < TOTAL_BARS; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'wave-bar';
+                bar.style.animationDelay = `${Math.random() * 0.5}s`;
+                waveContainer.appendChild(bar);
+            }
+        }
+        initWave();
+
+        function updateWave(fraction) {
+            if (!waveContainer) return;
+            const bars = waveContainer.children;
+            const activeCount = Math.floor(fraction * TOTAL_BARS);
+
+            for (let i = 0; i < TOTAL_BARS; i++) {
+                if (i <= activeCount) {
+                    bars[i].classList.add('active');
+                } else {
+                    bars[i].classList.remove('active');
+                }
+            }
+        }
+
+        // --- Event Listeners ---
+        if (convertBtn) {
+            convertBtn.addEventListener('click', toggleConversion);
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', resetUI);
+        }
+
+        async function toggleConversion() {
+            if (isConverting) {
+                cancelConversion();
+            } else {
+                startConversion();
+            }
+        }
+
+        function cancelConversion() {
+            if (abortController) {
+                abortController.abort();
+                abortController = null;
+            }
+
+            isConverting = false;
+
+            const li = document.createElement('div');
+            li.className = 'log-item error';
+            li.textContent = 'Conversion cancelled by user.';
+            logList.prepend(li);
+
+            currentAction.textContent = "Cancelled";
+            updateButtonState(false);
+
+            const bars = document.querySelectorAll('.wave-bar');
+            bars.forEach(b => b.classList.remove('active'));
+        }
+
+        function extractPlaylistId(url) {
+            try {
+                // Support basics: https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M?si...
+                const parts = url.split('/playlist/');
+                if (parts.length > 1) {
+                    return parts[1].split('?')[0];
+                }
+            } catch (e) { return null; }
+            return null;
+        }
+
+        async function triggerAnalysis(url) {
+            const pid = extractPlaylistId(url);
+            if (!pid) return;
+
+            moodLabel.textContent = "Analyzing vibes...";
+
+            try {
+                const res = await fetch(`/analyze/${pid}`);
+                if (!res.ok) throw new Error('Analysis failed');
+                const data = await res.json();
+                renderMood(data);
+            } catch (e) {
+                console.error(e);
+                moodLabel.textContent = "Analysis failed.";
+            }
+        }
+
+        function renderMood(data) {
+            // Update Text
+            moodLabel.textContent = data.mood_label;
+            energyVal.textContent = Math.round(data.avg_energy * 100) + '%';
+            valenceVal.textContent = Math.round(data.avg_valence * 100) + '%';
+            trackCountVal.textContent = data.track_count;
+
+            // Orb Color Logic (Energy = Opacity/Intensity, Valence = Color Shift?)
+            // Simple mapping: Valence (0=Sad/Blue, 1=Happy/Green/Yellow)
+            // Energy (Size or Glow)
+
+            // Hue Mapping: 0.0 (Sad/Blue 240) -> 0.5 (Neutral 120) -> 1.0 (Happy 50/Yellow)
+            // Let's do: 0->Blue(220), 1->Orange(30)
+            const hue = 220 - (data.avg_valence * 190);
+            const saturation = 50 + (data.avg_energy * 50); // 50-100%
+
+            moodOrb.style.background = `radial-gradient(circle at 30% 30%, 
+                hsla(${hue}, ${saturation}%, 80%, 0.8) 0%, 
+                hsla(${hue}, ${saturation}%, 50%, 0.6) 40%, 
+                hsla(${hue}, ${saturation}%, 50%, 0) 70%)`;
+
+            moodOrb.style.boxShadow = `0 0 ${40 + data.avg_energy * 60}px hsla(${hue}, ${saturation}%, 50%, 0.4)`;
+
+            // Render Genres
+            genreContainer.innerHTML = '';
+            const genres = Object.keys(data.genres || {});
+
+            genres.forEach((g, i) => {
+                const el = document.createElement('div');
+                el.className = 'genre-node visible';
+                el.textContent = g;
+
+                // Random positioning around orb
+                const angle = (i / genres.length) * 2 * Math.PI;
+                const radius = 80; // px
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+
+                el.style.transform = `translate(${x}px, ${y}px)`;
+                // Correction for centering
+                el.style.left = 'calc(50% - ' + (el.offsetWidth / 2) + 'px)';
+                el.style.top = 'calc(50% - ' + (el.offsetHeight / 2) + 'px)';
+
+                // Absolute centering base
+                el.style.left = '50%';
+                el.style.top = '50%';
+                el.style.marginLeft = x + 'px';
+                el.style.marginTop = y + 'px';
+
+                genreContainer.appendChild(el);
+            });
+        }
+
+        async function startConversion() {
+            const url = playlistUrlInput.value.trim();
+            if (!url) {
+                playlistUrlInput.parentElement.style.transform = 'translateX(-5px)';
+                setTimeout(() => playlistUrlInput.parentElement.style.transform = 'none', 200);
+                return;
+            }
+
+            // --- UI Setup ---
+            isConverting = true;
+            abortController = new AbortController();
+            const signal = abortController.signal;
+
+            updateButtonState(true);
+            statusArea.classList.remove('hidden');
+            successMessage.classList.add('hidden');
+
+            logList.innerHTML = '';
+            currentAction.textContent = "Connecting...";
+
+            updateWave(0);
+            addedCountSpan.textContent = "0";
+            skippedCountSpan.textContent = "0";
+            progressText.textContent = "0/0";
+
+            // Clean Mood Board
+            moodLabel.textContent = "Waiting for music...";
+            energyVal.textContent = "-";
+            valenceVal.textContent = "-";
+            trackCountVal.textContent = "-";
+            genreContainer.innerHTML = "";
+
+            // TRIGGER ANALYSIS (Async, don't await)
+            triggerAnalysis(url);
+
+            const formData = new FormData();
+            formData.append('playlist_url', url);
+
+            try {
+                const response = await fetch('/convert', {
+                    method: 'POST',
+                    body: formData,
+                    signal: signal
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.substring(6));
+                                handleUpdate(data);
+                            } catch (e) { console.error("Parse Error", e); }
+                        }
+                    }
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    console.log('Fetch aborted');
+                } else {
+                    console.error(error);
+                    currentAction.textContent = "Connection Error";
+                    handleUpdate({ error: error.message });
+                }
+            }
+        }
+
+        function updateButtonState(converting) {
+            if (converting) {
+                convertBtn.classList.add('cancel-mode');
+                btnText.textContent = "Cancel Conversion";
+            } else {
+                convertBtn.classList.remove('cancel-mode');
+                btnText.textContent = "Start Conversion";
+            }
+        }
+
+        function handleUpdate(data) {
+            if (data.error) {
+                const li = document.createElement('div');
+                li.className = 'log-item error';
+                li.style.color = '#ff5555';
+                li.innerText = `✕ ${data.error}`;
+                logList.prepend(li);
+                currentAction.textContent = "Failed";
+
+                isConverting = false;
+                updateButtonState(false);
+                return;
+            }
+
+            if (data.status === 'completed') {
+                currentAction.textContent = "Done";
+                updateWave(1);
+
+                isConverting = false;
+                updateButtonState(false);
+                convertBtn.disabled = true;
+
+                setTimeout(() => {
+                    successMessage.classList.remove('hidden');
+                }, 800);
+                return;
+            }
+
+            if (data.status === 'processing') {
+                const fraction = (data.progress / data.total);
+                updateWave(fraction);
+
+                progressText.textContent = `${data.progress}/${data.total}`;
+                addedCountSpan.textContent = data.added;
+                skippedCountSpan.textContent = data.skipped;
+
+                currentAction.textContent = `Processing: ${data.artist} - ${data.current_track}`;
+
+                const li = document.createElement('div');
+                li.className = 'log-item fade-in-up';
+                li.innerHTML = `<span style="opacity:0.6">✓</span> <span>${data.current_track}</span>`;
+                logList.prepend(li);
+            } else if (data.status) {
+                currentAction.textContent = data.status;
+            }
+        }
+
+        function resetUI() {
+            successMessage.classList.add('hidden');
+            statusArea.classList.add('hidden');
+            playlistUrlInput.value = '';
+            logList.innerHTML = '';
+            updateWave(0);
+
+            isConverting = false;
+            convertBtn.disabled = false;
+            updateButtonState(false);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation | Port.io</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .docs-container {
+            max-width: 1000px;
+            margin: 60px auto;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-bg"></div>
+    <div class="noise-overlay"></div>
+
+    <nav class="glass-nav fade-in-down" style="position:relative; margin-bottom: 20px;">
+        <div class="logo">
+            <span class="logo-icon">Port.io</span>
+        </div>
+        <div class="nav-links">
+
+        </div>
+    </nav>
+
+    <div class="docs-wrapper">
+        <!-- Floating TOC (Desktop) -->
+        <aside class="docs-sidebar fade-in-up">
+            <div class="toc-container glass-panel">
+                <h4 class="toc-title">On this page</h4>
+                <ul class="toc-list">
+                    <li><a href="#overview">1. Overview</a></li>
+                    <li><a href="#architecture">2. Architecture</a></li>
+                    <li><a href="#auth">3. Authentication</a></li>
+                    <li><a href="#mood-engine">4. Mood Engine</a></li>
+                    <li><a href="#frontend">5. Frontend</a></li>
+                    <li><a href="#workflow">6. Workflow</a></li>
+                    <li><a href="#security">7. Security</a></li>
+                    <li><a href="#structure">8. Structure</a></li>
+                    <li><a href="#setup">9. Setup & Install</a></li>
+                    <li><a href="#design">10. Design Decisions</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="docs-content glass-card fade-in-up">
+            <header class="docs-header">
+                <h1>Port.io: Technical Documentation</h1>
+                <p class="lead">A Local-First, Privacy-Centric Playlist Converter & Music Intelligence Tool</p>
+            </header>
+
+            <hr class="docs-divider">
+
+            <section id="overview">
+                <h2>1. Project Overview</h2>
+                <p>Port.io is a specialized web application designed to migrate Spotify playlists to YouTube Music.
+                    Unlike commercial SaaS alternatives, it is engineered to run entirely on the user's local machine,
+                    ensuring 100% data privacy and zero dependence on third-party servers.</p>
+                <p>Beyond simple conversion, Port.io features a real-time <strong>Mood & Genre Analysis Engine</strong>.
+                    As the playlist converts, the application analyzes audio features (energy, valence) and artist
+                    metadata to visualize the "emotional profile" of the music through an interactive, animated HUD.</p>
+
+                <h3>Key Capabilities</h3>
+                <ul>
+                    <li><strong>Cross-Platform Conversion</strong>: High-accuracy matching between Spotify tracks and
+                        YouTube Music videos/songs.</li>
+                    <li><strong>Local-Only Architecture</strong>: No remote backend, no databases, no tracking. All
+                        tokens are stored locally.</li>
+                    <li><strong>Two-Step Authentication</strong>: Separates "User Identity" (Google Sign-In) from
+                        "Application Capability" (YouTube Music OAuth) for a transparent trust model.</li>
+                    <li><strong>Live Mood Visualization</strong>: Visualizes playlist "vibes" using a proprietary
+                        mapping of audio features to color and motion.</li>
+                    <li><strong>Stealth Operation</strong>: Uses <code>ytmusicapi</code> (which emulates internal
+                        browser headers) rather than the restricted public YouTube Data API.</li>
+                </ul>
+            </section>
+
+            <section id="architecture">
+                <h2>2. Architecture & Design Principles</h2>
+                <p>The application follows a <strong>Monolithic, Local-First</strong> architecture. It is built as a
+                    lightweight Flask wrapper around two powerful service layers.</p>
+
+                <h3>Principles</h3>
+                <ol>
+                    <li><strong>Identity != Capability</strong>: Who you are (Google Login) is separate from what the
+                        app can do (YouTube Music Access).</li>
+                    <li><strong>Zero Trust / Zero Persistence</strong>: To the extent possible, data is ephemeral.
+                        Spotify tokens live in RAM. YouTube tokens live in a user-controlled JSON file.</li>
+                    <li><strong>Visual Feedback</strong>: The user must never guess if the app is working. Every backend
+                        state is mirrored in the UI.</li>
+                </ol>
+
+                <h3>System Diagram</h3>
+                <pre><code>[ Browser / Frontend ]
+       |   ^
+       |   |  (SSE Stream / API Calls)
+       v   |
+[ Flask Application (Localhost:5000) ]
+       |
+  +----+----+---------------------------+
+  |         |                           |
+  v         v                           v
+[ Spotify Service ]           [ YTMusic Service ]
+  |  (Read-Only)                (Read-Write)
+  |                                     |
+  +---> [ Spotify API ]         [ YouTube Music Internal API ]</code></pre>
+            </section>
+
+            <section id="auth">
+                <h2>3. Authentication Systems</h2>
+                <p>Port.io implements a strict <strong>"Two-Gate" authentication model</strong>. This architecture was
+                    chosen to provide maximum transparency regarding permissions.</p>
+
+                <h3>A. Identity Layer: Google Sign-In (GIS)</h3>
+                <ul>
+                    <li><strong>Purpose</strong>: Establishes trust and personalizes the UI.</li>
+                    <li><strong>Mechanism</strong>: Google Identity Services (Web SDK).</li>
+                    <li><strong>Scope</strong>: <code>email</code>, <code>profile</code> (Identity only).</li>
+                </ul>
+
+                <h3>B. Capability Layer: YouTube Music (OAuth Device Flow)</h3>
+                <ul>
+                    <li><strong>Purpose</strong>: Grants the strictly necessary permission into the user's YouTube
+                        account to manage playlists.</li>
+                    <li><strong>Mechanism</strong>: OAuth 2.0 Device Authorization Flow (RFC 8628).</li>
+                    <li><strong>Scope</strong>: <code>https://www.googleapis.com/auth/youtube</code> (Manage account).
+                    </li>
+                </ul>
+            </section>
+
+            <section id="mood-engine">
+                <h2>4. Feature Spotlight: Mood & Genre Analysis Engine</h2>
+                <p>While conversion runs, the <code>SpotifyService</code> performs a parallel deep-dive analysis of the
+                    source playlist.</p>
+
+                <h3>Logic Pipeline</h3>
+                <ol>
+                    <li><strong>Batch Extraction</strong>: Tracks are batched (limit 50-100) to minimize API
+                        round-trips.</li>
+                    <li><strong>Feature Retrieval</strong>: Queries Spotify's <code>audio-features</code> endpoint for
+                        energy and valence.</li>
+                    <li><strong>Mood Classification</strong>: Uses a Quadrant System (High/Low Energy vs High/Low
+                        Valence) to label the vibe.</li>
+                </ol>
+
+                <pre><code class="language-json">{
+  "mood_label": "Melancholic / Sad",
+  "avg_energy": 0.35,
+  "avg_valence": 0.22,
+  "genres": {
+    "lo-fi beats": 12,
+    "downtempo": 8
+  }
+}</code></pre>
+            </section>
+
+            <section id="frontend">
+                <h2>5. Frontend & Visualization Architecture</h2>
+                <p>The visualization is <strong>not</strong> a chart. It is an algorithmic representation of the
+                    playlist's soul.</p>
+                <ul>
+                    <li><strong>Color Mapping</strong>: Hue is dynamically calculated from <code>avg_valence</code>.
+                    </li>
+                    <li><strong>Pulse Dynamics</strong>: The CSS <code>animation-duration</code> is inversely mapped to
+                        `avg_energy`.</li>
+                </ul>
+            </section>
+
+            <section id="workflow">
+                <h2>6. End-to-End Conversion Workflow</h2>
+                <ol>
+                    <li><strong>Initiation</strong>: Async Analysis + Streamed Conversion.</li>
+                    <li><strong>Analysis (Parallel)</strong>: Backend fetches features, Frontend renders Mood Orb.</li>
+                    <li><strong>Conversion Loop</strong>:
+                        <ul>
+                            <li>Scrape Spotify tracks.</li>
+                            <li>Create YouTube Music playlist.</li>
+                            <li>Search and Match (Heuristic).</li>
+                            <li>Add to Playlist.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Completion</strong>: Progress bar hits 100%.</li>
+                </ol>
+            </section>
+
+            <section id="security">
+                <h2>7. Security & Privacy Model</h2>
+                <ul>
+                    <li><strong>Local Execution</strong>: The Python process runs on <code>localhost</code>.</li>
+                    <li><strong>Credential Isolation</strong>: Spotify Secret in RAM, Google Client Secret only used
+                        during exchange.</li>
+                    <li><strong>No Analytics</strong>: Zero tracking or telemetry.</li>
+                </ul>
+            </section>
+
+            <section id="structure">
+                <h2>8. Project Structure</h2>
+                <ul>
+                    <li><strong><code>app.py</code></strong>: Flask controller.</li>
+                    <li><strong><code>spotify_service.py</code></strong>: Spotipy wrapper & Mood Logic.</li>
+                    <li><strong><code>ytmusic_service.py</code></strong>: ytmusicapi wrapper.</li>
+                    <li><strong><code>templates/index.html</code></strong>: Main SPA.</li>
+                </ul>
+            </section>
+
+            <section id="setup">
+                <h2>9. Setup & Installation Guide</h2>
+                <h3>Prerequisites</h3>
+                <ul>
+                    <li>Python 3.10+</li>
+                    <li>Spotify Developer Account</li>
+                    <li>Google Cloud Project</li>
+                </ul>
+                <pre><code>pip install -r requirements.txt
+python app.py</code></pre>
+            </section>
+
+            <section id="design">
+                <h2>10. Design Decisions</h2>
+                <p><strong>Why not use the YouTube Data API?</strong> The official Data API has strict quota limits.
+                    <code>ytmusicapi</code> uses the internal API used by the browser, offering higher tolerance for
+                    user actions.
+                </p>
+                <p><strong>Why User-Provided Credentials?</strong> To make the tool truly "free forever" and "private".
+                    If we hosted a shared server, we would incur costs and potential bans.</p>
+            </section>
+
+            <footer
+                style="margin-top:80px; text-align:center; color:var(--text-muted); padding: 40px 0; border-top: 1px solid var(--glass-border);">
+                Local-first · Private · No tracking · Free
+            </footer>
+        </main>
+    </div>
+</body>
+
+</html>
